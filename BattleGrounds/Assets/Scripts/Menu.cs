@@ -59,6 +59,16 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
 
         // activate the requested screen
         screen.SetActive(true);
+
+        if (screen == lobbyBrowserScreen)
+            UpdateLobbyBrowserUI();
+    }
+
+    public override void OnConnectedToMaster()
+    {
+        // enable the menu buttons once we connect to the server
+        createRoomButton.interactable = true;
+        findRoomButton.interactable = true;
     }
 
     public void OnPlayerNameValueChanged(TMP_InputField playerNameInput)
@@ -66,21 +76,24 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         PhotonNetwork.NickName = playerNameInput.text;
     }
 
-    // called when the "Create Room" button has been pressed.
+    
     public void OnCreateRoomButton()
-    {
+    { 
+        // called when the "Create Room" button has been pressed.
         SetScreen(createRoomScreen);
     }
 
-    // called when the "Find Room" button has been pressed
+    
     public void OnFindRoomButton()
     {
+        // called when the "Find Room" button has been pressed
         SetScreen(lobbyBrowserScreen);
     }
 
-    // called when the "Back" button gets pressed
+    
     public void OnBackButton()
     {
+        // called when the "Back" button gets pressed
         SetScreen(mainScreen);
     }
 
@@ -92,7 +105,8 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public override void OnJoinedRoom()
     {
         // go to the lobby
-        SetScreen(lobbyScreen);
+        SetScreen(lobbyScreen); 
+        Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
         UpdateLobbyUI();
     }
 
@@ -133,8 +147,56 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         SetScreen(mainScreen);
     }
 
-    void Update()
+    void UpdateLobbyBrowserUI()
     {
+        // disable all room buttons
+        foreach (GameObject button in roomButtons)
+            button.SetActive(false);
         
+        // display all current rooms in the master server
+        for (int x = 0; x < roomList.Count; ++x)
+        {
+            // get or create the button object
+            GameObject button = x >= roomButtons.Count ? CreateRoomButton() : roomButtons
+            [x];
+            button.SetActive(true);
+            
+            // set the room name and player count texts
+            button.transform.Find("RoomNameText").GetComponent<TextMeshProUGUI>().text =
+            roomList[x].Name;
+            button.transform.Find("PlayerCountText").GetComponent<TextMeshProUGUI>().text
+            = roomList[x].PlayerCount + " / " + roomList[x].MaxPlayers;
+            
+            
+            // set the button OnClick event
+            Button buttonComp = button.GetComponent<Button>();
+            string roomName = roomList[x].Name;
+            buttonComp.onClick.RemoveAllListeners();
+            buttonComp.onClick.AddListener(() => { OnJoinRoomButton(roomName); });
+        }
+    }
+
+    GameObject CreateRoomButton()
+    {
+        GameObject buttonObj = Instantiate(roomButtonPrefab, roomListContainer.transform);
+
+        roomButtons.Add(buttonObj);
+
+        return buttonObj;
+    }
+
+    public void OnJoinRoomButton(string roomName)
+    {
+        NetworkManager.instance.JoinRoom(roomName);
+    }
+
+    public void OnRefreshButton()
+    {
+        UpdateLobbyBrowserUI();
+    }
+
+    public override void OnRoomListUpdate(List<RoomInfo> allRooms)
+    {
+        roomList = allRooms;
     }
 }
