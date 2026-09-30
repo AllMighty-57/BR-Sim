@@ -46,7 +46,21 @@ public class PlayerWeapon : MonoBehaviour
         // spawn and orientate it
         GameObject bulletObj = Instantiate(bulletPrefab, pos, Quaternion.identity);
         bulletObj.transform.forward = dir;
-    } 
+
+        // get bullet script
+        Bullet bulletScript = bulletObj.GetComponent<Bullet>(); 
+
+        // initialize it and set the velocity
+        bulletScript.Initialize(damage, player.id, player.photonView.IsMine);
+        bulletScript.rig.linearVelocity = dir * bulletSpeed;
+    }
+
+    [PunRPC]
+    public void GiveAmmo(int ammoToGive)
+    {
+        curAmmo = Mathf.Clamp(curAmmo + ammoToGive, 0, maxAmmo);
+        // update the ammo text
+    }
 
 
 }

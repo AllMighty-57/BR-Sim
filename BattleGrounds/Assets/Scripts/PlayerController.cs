@@ -1,31 +1,32 @@
-using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class PlayerController : MonoBehaviourPun
 {
+    [Header("Info")]
+    public int id;
+    private int curAttackerId;
+
     [Header("Stats")]
     public float moveSpeed;
     public float jumpForce;
-
-    [Header("Components")]
-    public Rigidbody rig;
-
-    private int curAttackerId;
-    
     public int curHp;
     public int maxHp;
     public int kills;
-    public bool dead;
+    public bool dead; 
+
     private bool flashingDamage;
-    public MeshRenderer mr;
 
-    public PlayerWeapon weapon;
-
-    public int id;
+    [Header("Components")]
+    public Rigidbody rig;
     public Player photonPlayer;
+    public PlayerWeapon weapon;
+    public MeshRenderer mr;
+    public GameObject gunModel;
 
 
     [PunRPC]
@@ -69,23 +70,6 @@ public class PlayerController : MonoBehaviourPun
             velocity.y = rig.linearVelocity.y;
 
             rig.linearVelocity = velocity;
-        }
-        else
-        {
-            // AIR MOVEMENT
-            // Don't replace horizontal velocity with sprint speed.
-            // Instead, apply a small amount of air control.
-            float airControl = 0.5f;
-
-            Vector3 airVelocity = rig.linearVelocity;
-
-            Vector3 desiredVelocity = inputDirection * moveSpeed;
-
-            airVelocity.x = Mathf.Lerp(airVelocity.x, desiredVelocity.x, airControl * Time.deltaTime);
-
-            airVelocity.z = Mathf.Lerp(airVelocity.z, desiredVelocity.z, airControl * Time.deltaTime);
-
-            rig.linearVelocity = airVelocity;
         }
     }
 
@@ -138,6 +122,43 @@ public class PlayerController : MonoBehaviourPun
     [PunRPC]
     void Die()
     {
+        curHp = 0;
+        dead = true;
+        GameManager.instance.alivePlayers--;
+
+        // host will check win condition
+        if (PhotonNetwork.IsMasterClient)
+            GameManager.instance.CheckWinCondition();
+
+        // is this our local player?
+        if (photonView.IsMine)
+        {
+            if (curAttackerId != 0)
+                GameManager.instance.GetPlayer(curAttackerId).photonView.RPC("AddKill", RpcTarget.All);
+            
+            // set the cam to spectator
+            GetComponentInChildren<CameraController>().SetAsSpectator();
+            
+            // disable the physics and hide the player
+            rig.isKinematic = true; 
+            gunModel.SetActive(false);
+            transform.position = new Vector3(0, -50, 0); 
+            Debug.Log("Player " + id + " has died and is now a spectator.");
+        }
+    }
+
+    [PunRPC]
+    public void Heal(int amountToHeal)
+    {
+        curHp = Mathf.Clamp(curHp + amountToHeal, 0, maxHp);
+        // update the health bar UI
+    } 
+
+
+    [PunRPC]
+    public void AddKill()
+    {
+        kills++;
     }
 
     void Update()
