@@ -4216,7 +4216,7 @@ GameObject:
   - component: {fileID: 1750573218}
   - component: {fileID: 1750573217}
   m_Layer: 5
-  m_Name: BackButton
+  m_Name: LeaveLobbyButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4288,7 +4288,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1433656573}
         m_TargetAssemblyTypeName: Menu, Assembly-CSharp
-        m_MethodName: OnBackButton
+        m_MethodName: OnLeaveLobbyButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

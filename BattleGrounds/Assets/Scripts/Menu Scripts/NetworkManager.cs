@@ -12,7 +12,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     void Awake()
     {
         instance = this;
-        DontDestroyOnLoad(gameObject);
+        //DontDestroyOnLoad(gameObject);
     }
 
     void Start()
@@ -23,13 +23,25 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        PhotonNetwork.JoinLobby();
         Debug.Log("We've connected to the master server!");
+        
+        PhotonNetwork.JoinLobby();
+    }
+
+    public override void OnJoinedLobby()
+    {
+        Debug.Log("Joined Photon Lobby.");
     }
 
     // creates a new room of the requested room name
     public void CreateRoom(string roomName)
     {
+        if (PhotonNetwork.Server != ServerConnection.MasterServer)
+        {
+            Debug.LogWarning("Cannot create room: Not on Master Server.");
+            return;
+        } 
+
         RoomOptions options = new RoomOptions();
         options.MaxPlayers = (byte)maxPlayers;
 
@@ -39,6 +51,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // attempts to join a room
     public void JoinRoom(string roomName)
     {
+        if (!PhotonNetwork.IsConnectedAndReady)
+        {
+            Debug.LogWarning("Cannot join room: Photon is not connected and ready.");
+            return;
+        }
+
+        if (PhotonNetwork.Server != ServerConnection.MasterServer)
+        {
+            Debug.LogWarning(
+                "Cannot join room: Client is currently on " +
+                PhotonNetwork.Server +
+                ". Waiting for Master Server."
+            );
+            return;
+        }
+
         PhotonNetwork.JoinRoom(roomName);
     }
 

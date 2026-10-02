@@ -120,7 +120,7 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         // go to the lobby
         SetScreen(lobbyScreen); 
         Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
-        UpdateLobbyUI();
+        photonView.RPC("UpdateLobbyUI", RpcTarget.All);
     }
 
     // called when a player leaves the room - update the lobby UI
@@ -192,6 +192,7 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
             // set the room name and player count texts
             button.transform.Find("RoomNameText").GetComponent<TextMeshProUGUI>().text =
             roomList[x].Name;
+
             button.transform.Find("PlayerCountText").GetComponent<TextMeshProUGUI>().text
             = roomList[x].PlayerCount + " / " + roomList[x].MaxPlayers;
             
