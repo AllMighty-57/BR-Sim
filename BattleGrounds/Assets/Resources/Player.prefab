@@ -1004,7 +1004,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2934244686518519591}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: BulletSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1019,7 +1019,7 @@ Transform:
   m_GameObject: {fileID: 7992262966077473533}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: -0.432, z: 2.02}
+  m_LocalPosition: {x: -0.23, y: -0.288, z: 2.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1187,8 +1187,8 @@ MonoBehaviour:
   id: 0
   moveSpeed: 8
   jumpForce: 6
-  curHp: 0
-  maxHp: 0
+  curHp: 100
+  maxHp: 100
   kills: 0
   dead: 0
   rig: {fileID: 8167087601349201688}
@@ -1246,10 +1246,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b526437df6d40c544b53be2aa89dbacb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
-  damage: 0
-  curAmmo: 0
-  maxAmmo: 0
-  bulletSpeed: 0
-  shootRate: 0
+  damage: 15
+  curAmmo: 15
+  maxAmmo: 15
+  bulletSpeed: 16
+  shootRate: 0.2
   bulletPrefab: {fileID: 4695866695992633875, guid: 7e3a4653ffb652f4191ebf652802a4ec, type: 3}
   bulletSpawnPos: {fileID: 2934244686518519591}

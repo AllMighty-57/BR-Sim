@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
@@ -8,12 +10,14 @@ public class Bullet : MonoBehaviour
 
     public Rigidbody rig;
 
+    // called when the bullet is spawned
     public void Initialize(int damage, int attackerId, bool isMine)
     {
         this.damage = damage;
         this.attackerId = attackerId;
-        this.isMine = isMine; 
+        this.isMine = isMine;
 
+        // set a lifetime so it can't go on forever
         Destroy(gameObject, 5.0f);
     }
 
@@ -29,5 +33,6 @@ public class Bullet : MonoBehaviour
             if (player.id != attackerId)
                 player.photonView.RPC("TakeDamage", player.photonPlayer, attackerId, damage);
         }
+        Destroy(gameObject);
     }
 }

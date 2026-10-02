@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -45,19 +47,29 @@ public class GameManager : MonoBehaviourPun
     {
         GameObject playerObj = PhotonNetwork.Instantiate(playerPrefabLocation, 
         spawnPoints[Random.Range(0, spawnPoints.Length)].position, Quaternion.identity);
+        
         // initialize the player for all other players 
-
         playerObj.GetComponent<PlayerController>().photonView.RPC("Initialize", RpcTarget.All,
         PhotonNetwork.LocalPlayer);
     }
 
     public PlayerController GetPlayer(int playerId)
     {
-        return players.First(x => x.id == playerId);
+        foreach (PlayerController player in players)
+        {
+            if (player != null && player.id == playerId)
+                return player;
+        }
+        return null;
     }
     public PlayerController GetPlayer(GameObject playerObj)
     {
-        return players.First(x => x.gameObject == playerObj);
+        foreach (PlayerController player in players)
+        {
+            if (player != null && player.gameObject == playerObj)
+                return player;
+        }
+        return null;
     }
 
     
@@ -71,6 +83,8 @@ public class GameManager : MonoBehaviourPun
     void WinGame(int winningPlayer)
     {
         // set the UI win text
+        GameUI.instance.SetWinText(GetPlayer(winningPlayer).photonPlayer.NickName);
+
         Invoke("GoBackToMenu", postGameTime);
     }
     void GoBackToMenu()

@@ -1,9 +1,10 @@
-using Photon.Pun;
-using Photon.Realtime;
+using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using Photon.Pun;
+using Photon.Realtime;
 
 public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
 {
@@ -42,7 +43,10 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         if (PhotonNetwork.InRoom)
         {
             // go to the lobby
-            // make the room visible
+            SetScreen(lobbyScreen);
+            UpdateLobbyUI();
+
+            // make the room visible again
             PhotonNetwork.CurrentRoom.IsVisible = true;
             PhotonNetwork.CurrentRoom.IsOpen = true;
         }
@@ -63,6 +67,20 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         if (screen == lobbyBrowserScreen)
             UpdateLobbyBrowserUI();
     }
+    
+    public void OnBackButton()
+    {
+        // called when the "Back" button gets pressed
+        SetScreen(mainScreen);
+    }
+
+         // MAIN SCREEN
+
+    // called when the player name input field has been changed
+    public void OnPlayerNameValueChanged(TMP_InputField playerNameInput)
+    {
+        PhotonNetwork.NickName = playerNameInput.text;
+    }
 
     public override void OnConnectedToMaster()
     {
@@ -71,19 +89,13 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         findRoomButton.interactable = true;
     }
 
-    public void OnPlayerNameValueChanged(TMP_InputField playerNameInput)
-    {
-        PhotonNetwork.NickName = playerNameInput.text;
-    }
-
-    
+    // called when the "Create Room" button has been pressed
     public void OnCreateRoomButton()
     { 
         // called when the "Create Room" button has been pressed.
         SetScreen(createRoomScreen);
     }
 
-    
     public void OnFindRoomButton()
     {
         // called when the "Find Room" button has been pressed
@@ -91,17 +103,18 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     }
 
     
-    public void OnBackButton()
-    {
-        // called when the "Back" button gets pressed
-        SetScreen(mainScreen);
-    }
+        // CREATE ROOM SCREEN
 
     public void OnCreateButton(TMP_InputField roomNameInput)
     {
         NetworkManager.instance.CreateRoom(roomNameInput.text);
     }
 
+
+        // LOBBY SCREEN
+
+    // called when we join a room
+    // set the screen to be the Lobby and update the UI for all players
     public override void OnJoinedRoom()
     {
         // go to the lobby
@@ -110,6 +123,13 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         UpdateLobbyUI();
     }
 
+    // called when a player leaves the room - update the lobby UI
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        UpdateLobbyUI();
+    }
+
+    // updates the lobby player list and active buttons
     [PunRPC]
     void UpdateLobbyUI()
     {
@@ -126,11 +146,7 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
     }
 
-    public override void OnPlayerLeftRoom(Player otherPlayer)
-    {
-        UpdateLobbyUI();
-    }
-
+    // called when the "Start Game" button has been pressed
     public void OnStartGameButton()
     {
         // hide the room
@@ -140,11 +156,23 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         // tell everyone to load the game scene
         NetworkManager.instance.photonView.RPC("ChangeScene", RpcTarget.All, "Game");
     }
-
+    
+    // called when the "Leave Lobby" button has been pressed
     public void OnLeaveLobbyButton()
     {
         PhotonNetwork.LeaveRoom();
         SetScreen(mainScreen);
+    }
+
+        // LOBBY BROWSER SCREEN
+    
+    GameObject CreateRoomButton()
+    {
+        GameObject buttonObj = Instantiate(roomButtonPrefab, roomListContainer.transform);
+
+        roomButtons.Add(buttonObj);
+
+        return buttonObj;
     }
 
     void UpdateLobbyBrowserUI()
@@ -170,20 +198,14 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
             
             // set the button OnClick event
             Button buttonComp = button.GetComponent<Button>();
+
             string roomName = roomList[x].Name;
+
             buttonComp.onClick.RemoveAllListeners();
             buttonComp.onClick.AddListener(() => { OnJoinRoomButton(roomName); });
         }
     }
 
-    GameObject CreateRoomButton()
-    {
-        GameObject buttonObj = Instantiate(roomButtonPrefab, roomListContainer.transform);
-
-        roomButtons.Add(buttonObj);
-
-        return buttonObj;
-    }
 
     public void OnJoinRoomButton(string roomName)
     {

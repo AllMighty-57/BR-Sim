@@ -1,9 +1,8 @@
-using Photon.Pun;
-using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
+using Photon.Pun;
+using Photon.Realtime;
 
 public class PlayerController : MonoBehaviourPun
 {
@@ -34,31 +33,60 @@ public class PlayerController : MonoBehaviourPun
     {
         id = player.ActorNumber;
         photonPlayer = player;
+
         GameManager.instance.players[id - 1] = this;
+
         // is this not our local player?
         if (!photonView.IsMine)
         {
             GetComponentInChildren<Camera>().gameObject.SetActive(false);
             rig.isKinematic = true;
         }
+        else
+        {
+            GameUI.instance.Initialize(this);
+        }
+    }
+
+    void Update()
+    {
+        // if this isn't our local player or we're dead - return
+        if (!photonView.IsMine || dead)
+            return;
+        
+        if (Input.GetKeyDown(KeyCode.Space))
+            TryJump();
+        
+        if (Input.GetMouseButtonDown(0))
+            weapon.TryShoot();
+    }
+    void FixedUpdate()
+    {
+        Move();
     }
 
     void Move()
     {
-        // get the input axis
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        bool isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.5f);
+        bool isGrounded = Physics.Raycast(
+            transform.position,
+            Vector3.down,
+            1.5f
+        );
 
         Vector3 inputDirection =
-        (transform.forward * z + transform.right * x).normalized;
+            (transform.forward * z + transform.right * x).normalized;
 
         if (isGrounded)
         {
+            // -------------------------
+            // GROUND MOVEMENT
+            // -------------------------
+
             float currentSpeed = moveSpeed;
 
-            // Sprint only while grounded
             if (Input.GetKey(KeyCode.LeftShift))
             {
                 currentSpeed *= 2f;
@@ -66,10 +94,47 @@ public class PlayerController : MonoBehaviourPun
 
             Vector3 velocity = inputDirection * currentSpeed;
 
-            // Keep vertical velocity
+            // Preserve vertical velocity
             velocity.y = rig.linearVelocity.y;
 
             rig.linearVelocity = velocity;
+        }
+        else
+        {
+            // -------------------------
+            // AIR MOVEMENT
+            // -------------------------
+
+            Vector3 horizontalVelocity = new Vector3(
+                rig.linearVelocity.x,
+                0f,
+                rig.linearVelocity.z
+            );
+
+            // How strongly you can steer in the air
+            float airAcceleration = 8f;
+
+            // Add acceleration instead of replacing momentum
+            horizontalVelocity +=
+                inputDirection *
+                airAcceleration *
+                Time.fixedDeltaTime;
+
+            // Optional maximum horizontal speed
+            float maxAirSpeed = moveSpeed * 2f;
+
+            if (horizontalVelocity.magnitude > maxAirSpeed)
+            {
+                horizontalVelocity =
+                    horizontalVelocity.normalized * maxAirSpeed;
+            }
+
+            // Keep gravity / vertical velocity
+            rig.linearVelocity = new Vector3(
+                horizontalVelocity.x,
+                rig.linearVelocity.y,
+                horizontalVelocity.z
+            );
         }
     }
 
@@ -95,7 +160,9 @@ public class PlayerController : MonoBehaviourPun
         // flash the player red
         photonView.RPC("DamageFlash", RpcTarget.Others);
 
-        // update the health bar UI
+        // update the health bar UI 
+        GameUI.instance.UpdateHealthBar();
+
 
         // die if no health left
         if (curHp <= 0)
@@ -107,13 +174,18 @@ public class PlayerController : MonoBehaviourPun
     {
         if (flashingDamage)
             return;
+
         StartCoroutine(DamageFlashCoRoutine());
+
         IEnumerator DamageFlashCoRoutine()
         {
-            flashingDamage = true;
+            flashingDamage = true; 
+
             Color defaultColor = mr.material.color;
             mr.material.color = Color.red;
-            yield return new WaitForSeconds(0.05f);
+
+            yield return new WaitForSeconds(0.05f); 
+
             mr.material.color = defaultColor;
             flashingDamage = false;
         }
@@ -124,6 +196,7 @@ public class PlayerController : MonoBehaviourPun
     {
         curHp = 0;
         dead = true;
+
         GameManager.instance.alivePlayers--;
 
         // host will check win condition
@@ -143,7 +216,6 @@ public class PlayerController : MonoBehaviourPun
             rig.isKinematic = true; 
             gunModel.SetActive(false);
             transform.position = new Vector3(0, -50, 0); 
-            Debug.Log("Player " + id + " has died and is now a spectator.");
         }
     }
 
@@ -151,29 +223,20 @@ public class PlayerController : MonoBehaviourPun
     public void Heal(int amountToHeal)
     {
         curHp = Mathf.Clamp(curHp + amountToHeal, 0, maxHp);
-        // update the health bar UI
+
+        // update the health bar UI 
+        GameUI.instance.UpdateHealthBar();
     } 
 
 
     [PunRPC]
     public void AddKill()
     {
-        kills++;
+        kills++; 
+
+        GameUI.instance.UpdatePlayerInfoText();
     }
 
-    void Update()
-    {
-         if (!photonView.IsMine || dead)
-            return;
-        
-        if (Input.GetKeyDown(KeyCode.Space))
-            TryJump();
-        
-        if (Input.GetMouseButtonDown(0))
-            weapon.TryShoot();
-    }
-    void FixedUpdate()
-    {
-        Move();
-    }
+
+
 }

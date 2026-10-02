@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pickup
   type: 0
-  value: 5
+  value: 15
 --- !u!114 &9183627565809003452
 MonoBehaviour:
   m_ObjectHideFlags: 0

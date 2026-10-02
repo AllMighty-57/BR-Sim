@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -33,7 +35,8 @@ public class PlayerWeapon : MonoBehaviour
         curAmmo--;
         lastShootTime = Time.time;
         
-        // update the ammo UI
+        // update the ammo UI 
+        GameUI.instance.UpdateAmmoText();
         
         // spawn the bullet
         player.photonView.RPC("SpawnBullet", RpcTarget.All, bulletSpawnPos.transform.position, 
@@ -48,7 +51,7 @@ public class PlayerWeapon : MonoBehaviour
         bulletObj.transform.forward = dir;
 
         // get bullet script
-        Bullet bulletScript = bulletObj.GetComponent<Bullet>(); 
+        Bullet bulletScript = bulletObj.GetComponent<Bullet>();
 
         // initialize it and set the velocity
         bulletScript.Initialize(damage, player.id, player.photonView.IsMine);
@@ -59,8 +62,9 @@ public class PlayerWeapon : MonoBehaviour
     public void GiveAmmo(int ammoToGive)
     {
         curAmmo = Mathf.Clamp(curAmmo + ammoToGive, 0, maxAmmo);
-        // update the ammo text
+        
+        // update the ammo text 
+        GameUI.instance.UpdateAmmoText();
     }
-
 
 }
