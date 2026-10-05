@@ -111,39 +111,42 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     }
 
 
-        // LOBBY SCREEN
+    // LOBBY SCREEN
 
     // called when we join a room
     // set the screen to be the Lobby and update the UI for all players
     public override void OnJoinedRoom()
     {
-        // go to the lobby
-        SetScreen(lobbyScreen); 
+        SetScreen(lobbyScreen);
+
         Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
-        photonView.RPC("UpdateLobbyUI", RpcTarget.All);
+
+        UpdateLobbyUI();
     }
 
-    // called when a player leaves the room - update the lobby UI
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        UpdateLobbyUI();
+    }
+
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         UpdateLobbyUI();
     }
 
-    // updates the lobby player list and active buttons
-    [PunRPC]
     void UpdateLobbyUI()
     {
-        // enable or disable the start game button depending on if we're the host
         startGameButton.interactable = PhotonNetwork.IsMasterClient;
 
-        // display all the players
         playerListText.text = "";
 
         foreach (Player player in PhotonNetwork.PlayerList)
+        {
             playerListText.text += player.NickName + "\n";
-        
-        // set the room info text
-        roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
+        }
+
+        roomInfoText.text =
+            "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
     }
 
     // called when the "Start Game" button has been pressed
@@ -156,16 +159,19 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         // tell everyone to load the game scene
         NetworkManager.instance.photonView.RPC("ChangeScene", RpcTarget.All, "Game");
     }
-    
+
     // called when the "Leave Lobby" button has been pressed
     public void OnLeaveLobbyButton()
     {
         PhotonNetwork.LeaveRoom();
+    }
+    public override void OnLeftRoom()
+    {
         SetScreen(mainScreen);
     }
 
-        // LOBBY BROWSER SCREEN
-    
+    // LOBBY BROWSER SCREEN
+
     GameObject CreateRoomButton()
     {
         GameObject buttonObj = Instantiate(roomButtonPrefab, roomListContainer.transform);
