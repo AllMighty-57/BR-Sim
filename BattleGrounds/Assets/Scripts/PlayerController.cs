@@ -10,8 +10,15 @@ public class PlayerController : MonoBehaviourPun
     public int id;
     private int curAttackerId;
 
-    [Header("Stats")]
+    [Header("Movement")]
     public float moveSpeed;
+    public float sprintMultiplier = 2f;
+
+    [Header("Air Control")]
+    public float airAcceleration = 8f;
+    public float maxAirSpeed = 18f;
+
+    [Header("Stats")]
     public float jumpForce;
     public int curHp;
     public int maxHp;
@@ -58,7 +65,10 @@ public class PlayerController : MonoBehaviourPun
             TryJump();
         
         if (Input.GetMouseButtonDown(0))
-            weapon.TryShoot();
+            weapon.TryShoot(); 
+
+        if (Input.GetKeyDown(KeyCode.R))
+            weapon.Reload();
     }
     void FixedUpdate()
     {
@@ -106,30 +116,27 @@ public class PlayerController : MonoBehaviourPun
             // -------------------------
 
             Vector3 horizontalVelocity = new Vector3(
-                rig.linearVelocity.x,
-                0f,
-                rig.linearVelocity.z
+            rig.linearVelocity.x,
+            0f,
+            rig.linearVelocity.z
             );
 
-            // How strongly you can steer in the air
-            float airAcceleration = 8f;
-
-            // Add acceleration instead of replacing momentum
-            horizontalVelocity +=
-                inputDirection *
-                airAcceleration *
-                Time.fixedDeltaTime;
-
-            // Optional maximum horizontal speed
-            float maxAirSpeed = moveSpeed * 2f;
-
-            if (horizontalVelocity.magnitude > maxAirSpeed)
+            // Only air strafe when there is input
+            if (x != 0f || z != 0f)
             {
-                horizontalVelocity =
-                    horizontalVelocity.normalized * maxAirSpeed;
+                horizontalVelocity +=
+                    inputDirection *
+                    airAcceleration *
+                    Time.fixedDeltaTime;
+
+                // Prevent air acceleration from exceeding max speed
+                if (horizontalVelocity.magnitude > maxAirSpeed)
+                {
+                    horizontalVelocity =
+                        horizontalVelocity.normalized * maxAirSpeed;
+                }
             }
 
-            // Keep gravity / vertical velocity
             rig.linearVelocity = new Vector3(
                 horizontalVelocity.x,
                 rig.linearVelocity.y,

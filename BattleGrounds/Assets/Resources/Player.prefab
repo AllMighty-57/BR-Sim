@@ -1039,9 +1039,9 @@ GameObject:
   - component: {fileID: 5844417470164527459}
   - component: {fileID: 8167087601349201688}
   - component: {fileID: 8262306645618689625}
+  - component: {fileID: 5142798628514614321}
   - component: {fileID: 2016607222853170129}
   - component: {fileID: 3243185141468779914}
-  - component: {fileID: 5142798628514614321}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1195,6 +1195,27 @@ MonoBehaviour:
   weapon: {fileID: 5142798628514614321}
   mr: {fileID: 4027138318309675172}
   gunModel: {fileID: 2835649581636256771}
+--- !u!114 &5142798628514614321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8212179672346926342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b526437df6d40c544b53be2aa89dbacb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
+  damage: 10
+  curAmmo: 15
+  magSize: 15
+  reserveAmmo: 45
+  reserveSize: 45
+  bulletSpeed: 30
+  shootRate: 0.2
+  bulletPrefab: {fileID: 4695866695992633875, guid: 7e3a4653ffb652f4191ebf652802a4ec, type: 3}
+  bulletSpawnPos: {fileID: 2934244686518519591}
 --- !u!114 &2016607222853170129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1234,22 +1255,3 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
---- !u!114 &5142798628514614321
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8212179672346926342}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b526437df6d40c544b53be2aa89dbacb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
-  damage: 15
-  curAmmo: 15
-  maxAmmo: 15
-  bulletSpeed: 16
-  shootRate: 0.2
-  bulletPrefab: {fileID: 4695866695992633875, guid: 7e3a4653ffb652f4191ebf652802a4ec, type: 3}
-  bulletSpawnPos: {fileID: 2934244686518519591}

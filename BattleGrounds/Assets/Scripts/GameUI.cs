@@ -7,6 +7,9 @@ using Photon.Pun;
 
 public class GameUI : MonoBehaviour
 {
+    public GameObject game;
+    public GameObject tutorial;
+
     public Slider healthBar;
     public TextMeshProUGUI playerInfoText;
     public TextMeshProUGUI ammoText;
@@ -21,6 +24,22 @@ public class GameUI : MonoBehaviour
     void Awake()
     {
         instance = this;
+    } 
+
+    public void closeTutorial()
+    {
+        if (tutorial != false)
+        {
+            tutorial.SetActive(false);
+            game.SetActive(true);
+        }
+        else
+            return;
+    }
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.V)) 
+            closeTutorial();
     }
 
     public void Initialize(PlayerController localPlayer)
@@ -46,7 +65,7 @@ public class GameUI : MonoBehaviour
 
     public void UpdateAmmoText()
     {
-        ammoText.text = player.weapon.curAmmo + " / " + player.weapon.maxAmmo;
+        ammoText.text = player.weapon.curAmmo + " / " + player.weapon.reserveAmmo;
     }
 
     public void SetWinText(string winnerName)

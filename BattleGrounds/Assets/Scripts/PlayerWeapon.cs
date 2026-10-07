@@ -9,7 +9,9 @@ public class PlayerWeapon : MonoBehaviour
     [Header("Stats")]
     public int damage;
     public int curAmmo;
-    public int maxAmmo;
+    public int magSize;
+    public int reserveAmmo;
+    public int reserveSize;
     public float bulletSpeed;
     public float shootRate;
 
@@ -24,6 +26,31 @@ public class PlayerWeapon : MonoBehaviour
     {
         // get required components
         player = GetComponent<PlayerController>();
+    }
+
+    public void Reload()
+    {
+        int ammoToGive = magSize - curAmmo;
+        if (curAmmo == magSize)
+            return;
+        else if (curAmmo < magSize)
+        { 
+            if(reserveAmmo < ammoToGive)
+                ammoToGive = reserveAmmo;
+            curAmmo += ammoToGive;
+            reserveAmmo -= ammoToGive;
+           
+            // update the ammo UI 
+            GameUI.instance.UpdateAmmoText();
+        }
+        else
+        {
+            curAmmo = magSize;
+            reserveAmmo -= magSize;
+            
+            // update the ammo UI 
+            GameUI.instance.UpdateAmmoText();
+        }
     }
 
     public void TryShoot()
@@ -61,8 +88,10 @@ public class PlayerWeapon : MonoBehaviour
     [PunRPC]
     public void GiveAmmo(int ammoToGive)
     {
-        curAmmo = Mathf.Clamp(curAmmo + ammoToGive, 0, maxAmmo);
-        
+        reserveAmmo += ammoToGive;
+        if (reserveAmmo > reserveSize)
+            reserveAmmo = reserveSize;
+
         // update the ammo text 
         GameUI.instance.UpdateAmmoText();
     }
