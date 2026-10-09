@@ -155,6 +155,50 @@ public class PlayerController : MonoBehaviourPun
             rig.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
     }
 
+
+    void UpdateHealthColor()
+    {
+        if (mr == null || maxHp <= 0)
+            return;
+
+        float healthPercent = (float)curHp / maxHp;
+
+        // Color at 100% health: pale green
+        Color healthyColor = new Color(0.75f, 0.85f, 0.68f);
+
+        // Color at 50% health: medium roasted coffee
+        Color mediumCoffeeColor = new Color(0.40f, 0.25f, 0.14f);
+
+        // Color at 0% health: dark roasted coffee bean
+        Color darkCoffeeColor = new Color(0.16f, 0.075f, 0.035f);
+
+        Color targetColor;
+
+        if (healthPercent >= 0.5f)
+        {
+            // Blend from pale green to medium coffee brown.
+            float t = (1f - healthPercent) * 2f;
+
+            targetColor = Color.Lerp(
+                healthyColor,
+                mediumCoffeeColor,
+                t
+            );
+        }
+        else
+        {
+            // Blend from medium coffee brown to dark coffee brown.
+            float t = (0.5f - healthPercent) * 2f;
+
+            targetColor = Color.Lerp(
+                mediumCoffeeColor,
+                darkCoffeeColor,
+                t
+            );
+        } 
+        mr.material.color = targetColor;
+    }
+
     [PunRPC]
     public void TakeDamage(int attackerId, int damage)
     {
@@ -165,11 +209,16 @@ public class PlayerController : MonoBehaviourPun
         curAttackerId = attackerId;
 
         // flash the player red
-        photonView.RPC("DamageFlash", RpcTarget.Others);
+        DamageFlash();
 
-        // update the health bar UI 
-        GameUI.instance.UpdateHealthBar();
+        UpdateHealthColor();    
 
+        // Update UI only for the player who owns this character.
+        if (photonView.IsMine)
+        {
+            GameUI.instance.UpdateHealthBar();
+            GameUI.instance.UiFlash();
+        }
 
         // die if no health left
         if (curHp <= 0)
@@ -186,14 +235,15 @@ public class PlayerController : MonoBehaviourPun
 
         IEnumerator DamageFlashCoRoutine()
         {
-            flashingDamage = true; 
+            flashingDamage = true;
 
-            Color defaultColor = mr.material.color;
             mr.material.color = Color.red;
 
-            yield return new WaitForSeconds(0.05f); 
+            yield return new WaitForSeconds(0.05f);
 
-            mr.material.color = defaultColor;
+            // Restore the color appropriate for current health.
+            UpdateHealthColor();
+
             flashingDamage = false;
         }
     }
@@ -231,8 +281,11 @@ public class PlayerController : MonoBehaviourPun
     {
         curHp = Mathf.Clamp(curHp + amountToHeal, 0, maxHp);
 
+        UpdateHealthColor();
+
         // update the health bar UI 
-        GameUI.instance.UpdateHealthBar();
+        if(photonView.IsMine) 
+            GameUI.instance.UpdateHealthBar();
     } 
 
 

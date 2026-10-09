@@ -16,6 +16,10 @@ public class GameUI : MonoBehaviour
     public TextMeshProUGUI winText;
     public Image winBackground;
 
+    public Image damageVignette;
+
+    private bool flashingDamage;
+
     private PlayerController player;
     
     // instance
@@ -24,7 +28,34 @@ public class GameUI : MonoBehaviour
     void Awake()
     {
         instance = this;
-    } 
+    }
+
+    public void UiFlash()
+    {
+        if (damageVignette == null)
+        {
+            Debug.LogError("Damage Vignette Image is not assigned!");
+            return;
+        }
+
+        if (flashingDamage)
+            return;
+
+        StartCoroutine(DamageFlashCoRoutine());
+    }
+
+    private IEnumerator DamageFlashCoRoutine()
+    {
+        flashingDamage = true;
+
+        damageVignette.gameObject.SetActive(true);
+
+        // Keep the vignette visible long enough to notice.
+        yield return new WaitForSeconds(0.25f);
+
+        damageVignette.gameObject.SetActive(false);
+        flashingDamage = false;
+    }
 
     public void closeTutorial()
     {

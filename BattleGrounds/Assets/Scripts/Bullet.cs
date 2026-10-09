@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class Bullet : MonoBehaviour
 {
@@ -31,7 +32,11 @@ public class Bullet : MonoBehaviour
             PlayerController player = GameManager.instance.GetPlayer(other.gameObject);
 
             if (player.id != attackerId)
-                player.photonView.RPC("TakeDamage", player.photonPlayer, attackerId, damage);
+                player.photonView.RPC("TakeDamage",
+                    Photon.Pun.RpcTarget.All, 
+                    attackerId, 
+                    damage
+                );
         }
         Destroy(gameObject);
     }
