@@ -286,8 +286,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b8d26c7452116a4d8770b98577b9a17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
-  sensX: 10
-  sensY: 10
+  sensX: 8
+  sensY: 8
   minY: -90
   maxY: 90
   spectatorMoveSpeed: 10
@@ -1185,12 +1185,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   id: 0
-  moveSpeed: 8
+  moveSpeed: 7.5
+  sprintMultiplier: 1.5
+  airAcceleration: 8
+  maxAirSpeed: 15
   jumpForce: 6
   curHp: 100
+  curStamina: 100
   maxHp: 100
+  maxStamina: 100
   kills: 0
   dead: 0
+  staminaDrainRate: 10
+  staminaRegenRate: 7
+  staminaRegenDelay: 1.5
   rig: {fileID: 8167087601349201688}
   weapon: {fileID: 5142798628514614321}
   mr: {fileID: 4027138318309675172}

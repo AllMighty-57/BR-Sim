@@ -21,9 +21,19 @@ public class PlayerController : MonoBehaviourPun
     [Header("Stats")]
     public float jumpForce;
     public int curHp;
+    public float curStamina;
     public int maxHp;
+    public int maxStamina;
     public int kills;
-    public bool dead; 
+    public bool dead;
+
+    [Header("Stamina")]
+    public float staminaDrainRate;
+    public float staminaRegenRate; 
+    public float staminaRegenDelay; 
+
+    private float staminaRegenTimer; 
+    private bool isSprinting;
 
     private bool flashingDamage;
 
@@ -60,7 +70,10 @@ public class PlayerController : MonoBehaviourPun
         // if this isn't our local player or we're dead - return
         if (!photonView.IsMine || dead)
             return;
-        
+
+        UpdateStamina();
+
+
         if (Input.GetKeyDown(KeyCode.Space))
             TryJump();
         
@@ -70,6 +83,54 @@ public class PlayerController : MonoBehaviourPun
         if (Input.GetKeyDown(KeyCode.R))
             weapon.Reload();
     }
+
+
+    void UpdateStamina()
+    {
+        bool isGrounded = Physics.Raycast(
+            transform.position,
+            Vector3.down,
+            1.5f
+        );
+
+        bool hasMovementInput =
+            Input.GetAxisRaw("Horizontal") != 0 ||
+            Input.GetAxisRaw("Vertical") != 0;
+
+        bool wantsToSprint =
+            isGrounded &&
+            hasMovementInput &&
+            Input.GetKey(KeyCode.LeftShift) &&
+            curStamina > 0f;
+
+        if (wantsToSprint)
+        {
+            isSprinting = true;
+
+            curStamina -= staminaDrainRate * Time.deltaTime;
+            curStamina = Mathf.Max(curStamina, 0f);
+
+            staminaRegenTimer = staminaRegenDelay;
+        }
+        else
+        {
+            isSprinting = false;
+
+            if (staminaRegenTimer > 0f)
+            {
+                staminaRegenTimer -= Time.deltaTime;
+            }
+            else
+            {
+                curStamina += staminaRegenRate * Time.deltaTime;
+                curStamina = Mathf.Min(curStamina, maxStamina);
+            }
+        }
+
+        GameUI.instance.UpdateSprintBar();
+    }
+
+
     void FixedUpdate()
     {
         Move();
@@ -97,9 +158,9 @@ public class PlayerController : MonoBehaviourPun
 
             float currentSpeed = moveSpeed;
 
-            if (Input.GetKey(KeyCode.LeftShift))
+            if (isSprinting)
             {
-                currentSpeed *= 2f;
+                currentSpeed *= sprintMultiplier;
             }
 
             Vector3 velocity = inputDirection * currentSpeed;
@@ -250,29 +311,45 @@ public class PlayerController : MonoBehaviourPun
 
     [PunRPC]
     void Die()
-    {
+    { 
+        if (dead)
+            return;
+
         curHp = 0;
         dead = true;
 
         GameManager.instance.alivePlayers--;
 
-        // host will check win condition
+        // Only the Master Client tracks the remaining player count.
+        // The dead check above prevents counting this death twice.
         if (PhotonNetwork.IsMasterClient)
+        {
+
+            Debug.Log("Players alive: " +
+                GameManager.instance.alivePlayers);
+
             GameManager.instance.CheckWinCondition();
+        }
 
         // is this our local player?
         if (photonView.IsMine)
         {
             if (curAttackerId != 0)
-                GameManager.instance.GetPlayer(curAttackerId).photonView.RPC("AddKill", RpcTarget.All);
-            
-            // set the cam to spectator
+            {
+                PlayerController attacker =
+                    GameManager.instance.GetPlayer(curAttackerId);
+
+                if (attacker != null)
+                {
+                    attacker.photonView.RPC("AddKill", RpcTarget.All); 
+                }
+            }
+
             GetComponentInChildren<CameraController>().SetAsSpectator();
-            
-            // disable the physics and hide the player
-            rig.isKinematic = true; 
+
+            rig.isKinematic = true;
             gunModel.SetActive(false);
-            transform.position = new Vector3(0, -50, 0); 
+            transform.position = new Vector3(0, -50, 0);
         }
     }
 

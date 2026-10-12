@@ -191,8 +191,7 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
         for (int x = 0; x < roomList.Count; ++x)
         {
             // get or create the button object
-            GameObject button = x >= roomButtons.Count ? CreateRoomButton() : roomButtons
-            [x];
+            GameObject button = x >= roomButtons.Count ? CreateRoomButton() : roomButtons[x];
             button.SetActive(true);
             
             // set the room name and player count texts

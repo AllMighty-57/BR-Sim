@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviourPun
 
     public float postGameTime;
 
+    private bool gameEnded = false;
+
 
     // instance
     public static GameManager instance;
@@ -75,15 +77,51 @@ public class GameManager : MonoBehaviourPun
     
     public void CheckWinCondition()
     {
+        // Only the Master Client can decide when the match ends.
+        if (!PhotonNetwork.IsMasterClient || gameEnded)
+            return;
+
+        // Count players who exist and are still alive.
+        PlayerController[] livingPlayers = players
+            .Where(p => p != null && !p.dead)
+            .ToArray();
+
+        alivePlayers = livingPlayers.Length;
+
+        // Do not declare a winner until exactly one player remains.
         if (alivePlayers == 1)
-            photonView.RPC("WinGame", RpcTarget.All, players.First(x => !x.dead).id);
+        {
+            gameEnded = true;
+
+            int winningPlayerId = livingPlayers[0].id;
+
+            photonView.RPC(
+                "WinGame",
+                RpcTarget.All,
+                winningPlayerId
+            );
+        }
     }
 
     [PunRPC]
     void WinGame(int winningPlayer)
     {
-        // set the UI win text
-        GameUI.instance.SetWinText(GetPlayer(winningPlayer).photonPlayer.NickName);
+        // Prevent duplicate end-game handling on each client.
+        if (gameEnded == false)
+            gameEnded = true;
+
+        PlayerController winner = GetPlayer(winningPlayer);
+
+        if (winner == null || winner.photonPlayer == null)
+        {
+            Debug.LogError("Could not find the winning player!");
+            return;
+        }
+
+        // Display the winner on every client.
+        GameUI.instance.SetWinText(
+            winner.photonPlayer.NickName
+        );
 
         Invoke("GoBackToMenu", postGameTime);
     }

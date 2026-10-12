@@ -11,6 +11,8 @@ public class GameUI : MonoBehaviour
     public GameObject tutorial;
 
     public Slider healthBar;
+    public Slider sprintBar;
+
     public TextMeshProUGUI playerInfoText;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI winText;
@@ -77,7 +79,12 @@ public class GameUI : MonoBehaviour
     {
         player = localPlayer;
         healthBar.maxValue = player.maxHp;
-        healthBar.value = player.curHp;
+        healthBar.value = player.curHp; 
+
+        sprintBar.maxValue = player.maxStamina; 
+        sprintBar.value = player.curStamina;
+        
+        sprintBar.gameObject.SetActive(player.curStamina < player.maxStamina);
 
         UpdatePlayerInfoText();
         UpdateAmmoText();
@@ -86,6 +93,21 @@ public class GameUI : MonoBehaviour
     public void UpdateHealthBar()
     {
         healthBar.value = player.curHp;
+    } 
+
+    public void UpdateSprintBar()
+    { 
+        if(player == null || sprintBar == null)
+            return;
+
+        sprintBar.value = player.curStamina;
+
+        // Hide the bar when stamina is completely full.
+        // Show it whenever stamina is being used or regenerated.
+        bool staminaIsFull =
+            player.curStamina >= player.maxStamina;
+
+        sprintBar.gameObject.SetActive(!staminaIsFull);
     }
 
     public void UpdatePlayerInfoText()
